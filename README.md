@@ -59,7 +59,22 @@ Les données sont un simple fichier JSON (`training.json`). Quand l'App Group se
 le fichier sera automatiquement déplacé dans le conteneur partagé pour que le widget
 et la montre puissent le lire.
 
-## Lancer l'app (Mac requis)
+## Aperçu sur ordinateur (sans Mac)
+
+`prototype/index.html` est une réplique web de l'app, avec le nouveau design
+(minimaliste, verre dépoli, palette Ocean Breeze) et les mêmes règles de progression.
+Elle sert à valider le look et les écrans avant de les porter dans l'app iPhone.
+
+1. Sur GitHub : bouton **Code**, puis **Download ZIP** (ou `git clone`).
+2. Ouvrir `prototype/index.html` dans Chrome, Safari, Edge ou Firefox (double-clic).
+
+Rien à installer. Les données de test restent dans le navigateur ;
+les boutons « Recharger l'exemple » et « Repartir de zéro » les réinitialisent.
+
+Palette : `#E8F6FF` fond (35 %), `#7FE7D6` menthe (30 %), `#3BA7F2` bleu (25 %),
+`#0B3D91` marine pour le texte (10 %). Police : Manrope. Icônes : Phosphor (MIT).
+
+## Lancer l'app iPhone (Mac requis)
 
 1. Installer Xcode (App Store) et [XcodeGen](https://github.com/yonaskolb/XcodeGen) :
    `brew install xcodegen`
@@ -74,11 +89,12 @@ Tests du moteur : `cd RareCandyKit && swift test`.
 
 ## Prochaines étapes
 
-- [ ] Design de l'app (icône, couleurs, écrans).
+- [ ] Porter le design du prototype dans l'app iPhone (SwiftUI) : couleurs, verre dépoli,
+      écrans Accueil / Entraînement / Profil, minuteur de repos, colonne « Précédent ».
+- [ ] Icône de l'app.
 - [ ] Widget « prochaine séance » (WidgetKit) : activer l'App Group dans `project.yml`
       et ajouter une cible widget qui lit `training.json` via `RareCandyKit`.
 - [ ] App Apple Watch : saisie des séries depuis la montre (même package `RareCandyKit`).
 - [ ] Apple Santé (HealthKit) : enregistrer chaque séance comme entraînement
       « Musculation traditionnelle » à la fin de la séance.
-- [ ] Minuteur de repos entre les séries.
 - [ ] Modifier une séance passée, unité lb, synchronisation iCloud.
