@@ -11,3 +11,6 @@ DerivedData/
 Package.resolved
 
 .DS_Store
+
+# Python
+__pycache__/

@@ -74,6 +74,14 @@ les boutons « Recharger l'exemple » et « Repartir de zéro » les réinitiali
 Palette : `#E8F6FF` fond (35 %), `#7FE7D6` menthe (30 %), `#3BA7F2` bleu (25 %),
 `#0B3D91` marine pour le texte (10 %). Police : Manrope. Icônes : Phosphor (MIT).
 
+## Design
+
+- `design-system/rarecandy/MASTER.md` : la référence (couleurs clair et sombre, contraste,
+  typographie, cibles tactiles, composants, mouvement). À suivre pour l'app iPhone.
+- `.claude/skills/ui-ux-pro-max/` : le skill [UI UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+  (licence MIT), installé dans le projet : chaque session Claude Code sur ce dépôt le charge.
+  Exemple : `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "touch target" --domain ux`.
+
 ## Lancer l'app iPhone (Mac requis)
 
 1. Installer Xcode (App Store) et [XcodeGen](https://github.com/yonaskolb/XcodeGen) :
