@@ -12,15 +12,24 @@ et à la séance suivante du même jour l'app te donne ton objectif :
 
 ## Ouvrir l'app sur ton iPhone (sans Mac)
 
-<img src="docs/expo-go-qr.png" width="220" alt="QR code Expo Go : exp://rc03keukql-anonymous-8081.exp.direct">
+<img src="docs/expo-go-qr.png" width="220" alt="QR code Expo Go : exp://rc03keukql-zooma94-8081.exp.direct">
 
-1. Installe **Expo Go** depuis l'App Store (gratuit).
-2. Lance le serveur : sur GitHub, onglet **Actions** → **Aperçu Expo Go** → **Run workflow**.
+**Une seule fois : relier le serveur à ton compte Expo.** Expo Go connecté au compte
+`zooma94` n'ouvre que les projets servis par ce même compte.
+
+1. Sur [expo.dev](https://expo.dev), connecté en `zooma94` : **Account settings** → **Access tokens**
+   → **Create token** (un jeton personnel, pas un « robot »). Copie-le.
+2. Sur GitHub, dans ce dépôt : **Settings** → **Secrets and variables** → **Actions**
+   → **New repository secret**. Nom : `EXPO_TOKEN`, valeur : le jeton.
+
+**Ensuite, à chaque fois :**
+
+1. Lance le serveur : onglet **Actions** → **Aperçu Expo Go** → **Run workflow**.
    Il se lance aussi tout seul après chaque modification de l'app (`mobile/`).
    Attends environ une minute que l'étape « QR code » soit cochée.
-3. Scanne ce QR code avec l'**appareil photo** de l'iPhone, puis touche « Ouvrir dans Expo Go ».
+2. Scanne ce QR code avec l'**appareil photo** de l'iPhone, puis touche « Ouvrir dans Expo Go ».
 
-Le QR code ne change jamais (adresse `exp://rc03keukql-anonymous-8081.exp.direct`), mais il ne marche
+Le QR code ne change pas (adresse `exp://rc03keukql-zooma94-8081.exp.direct`), mais il ne marche
 que pendant que le serveur tourne : 60 minutes après une modification, 120 minutes
 quand tu le lances à la main (réglable jusqu'à 330). Tes séances restent enregistrées sur le téléphone.
 
@@ -117,7 +126,6 @@ Tests du moteur : `cd RareCandyKit && swift test`.
 
 - [x] App Expo avec le design du prototype, testable sur iPhone via Expo Go.
 - [ ] Icône de l'app.
-- [ ] Compte Expo (gratuit) : QR code permanent avec EAS Update, sans serveur à lancer.
 - [ ] Publication App Store : build dans le cloud avec EAS Build (programme Apple Developer, 99 €/an).
 - [ ] Widget « prochaine séance » et app Apple Watch : cibles Swift ajoutées au projet Expo
       (build EAS nécessaire, Expo Go ne les affiche pas).

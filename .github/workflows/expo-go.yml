@@ -2,7 +2,11 @@ name: Aperçu Expo Go
 
 # Runs the Expo dev server on a GitHub runner, reachable from a phone through an
 # Expo tunnel, so the app opens in Expo Go without a Mac. The tunnel address is
-# fixed (TUNNEL_ID), so the QR code in the README always points here.
+# fixed (TUNNEL_ID + Expo username), so the QR code in the README always points here.
+#
+# Expo Go signed in to an Expo account only opens projects whose server is signed
+# in to the same account: the EXPO_TOKEN repository secret (a personal access token
+# from expo.dev) signs the runner in, links the project and signs the manifests.
 
 on:
   push:
@@ -25,6 +29,7 @@ concurrency:
 env:
   TUNNEL_ID: rc03keukql
   MINUTES: ${{ inputs.minutes || '60' }}
+  EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
 
 jobs:
   preview:
@@ -46,6 +51,17 @@ jobs:
       - name: Installer les dépendances
         run: npm ci
 
+      - name: Compte Expo
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::warning::Pas de secret EXPO_TOKEN : serveur anonyme, Expo Go doit être déconnecté pour l'ouvrir."
+            exit 0
+          fi
+          echo "Connecté à Expo en tant que : $(npx expo whoami)"
+          # Creates the project on the account the first time, links it afterwards.
+          npx --yes eas-cli@25.3.0 init --non-interactive --force
+          echo "Projet EAS : $(node -p "require('./app.json').expo.extra.eas.projectId")"
+
       - name: Démarrer le serveur et le tunnel
         run: |
           mkdir -p .expo
@@ -63,15 +79,23 @@ jobs:
 
       - name: Vérifier le tunnel et préparer le bundle iOS
         run: |
-          HOST="$TUNNEL_ID-anonymous-8081.exp.direct"
+          curl -sSf -H 'expo-platform: ios' -H 'accept: application/expo+json,application/json' http://127.0.0.1:8081/ > manifest.json
+          # The tunnel host the manifest points phones to: <TUNNEL_ID>-<user>-8081.exp.direct
+          HOST=$(node -p "require('./manifest.json').extra.expoClient.hostUri")
+          echo "HOST=$HOST" >> "$GITHUB_ENV"
           curl -sSf --retry 5 --retry-delay 3 "http://$HOST/status"; echo
-          BUNDLE=$(curl -sSf -H 'expo-platform: ios' -H 'accept: application/expo+json,application/json' http://127.0.0.1:8081/ \
-            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const u=new URL(JSON.parse(s).launchAsset.url);console.log('http://127.0.0.1:8081'+u.pathname+u.search)})")
+          if [ -n "$EXPO_TOKEN" ]; then
+            # Expo Go asks for a manifest signed by the expo-root certificate chain.
+            curl -sS -D headers.txt -o /dev/null -H 'expo-platform: ios' -H 'accept: multipart/mixed,application/expo+json' \
+              -H 'expo-expect-signature: sig, keyid="expo-root", alg="rsa-v1_5-sha256"' http://127.0.0.1:8081/
+            grep -i "content-type" headers.txt
+          fi
+          BUNDLE=$(node -p "const u=new URL(require('./manifest.json').launchAsset.url);'http://127.0.0.1:8081'+u.pathname+u.search")
           curl -sSf -o /dev/null -w "Bundle iOS : %{size_download} octets en %{time_total} s\n" --max-time 600 "$BUNDLE"
 
       - name: QR code
         run: |
-          URL="exp://$TUNNEL_ID-anonymous-8081.exp.direct"
+          URL="exp://$HOST"
           node scripts/expo-go-qr.mjs "$URL"
           {
             echo "## Aperçu Expo Go ouvert"
@@ -87,7 +111,6 @@ jobs:
           case "$MINUTES" in ''|*[!0-9]*) MINUTES=60 ;; esac
           [ "$MINUTES" -gt 330 ] && MINUTES=330
           END=$(( $(date +%s) + MINUTES * 60 ))
-          HOST="$TUNNEL_ID-anonymous-8081.exp.direct"
           FAILS=0
           while [ "$(date +%s)" -lt "$END" ]; do
             sleep 60
