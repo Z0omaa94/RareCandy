@@ -1,6 +1,7 @@
 # RareCandy
 
-App iOS de musculation qui suit la **surcharge progressive** à ta place.
+App iPhone de musculation qui suit la **surcharge progressive** à ta place.
+Faite avec Expo (React Native) : elle se teste sur l'iPhone sans Mac.
 
 Tu crées tes jours d'entraînement (Jour 1 : Pecs, Jour 2 : Dos…), tu notes tes séries,
 et à la séance suivante du même jour l'app te donne ton objectif :
@@ -8,6 +9,20 @@ et à la séance suivante du même jour l'app te donne ton objectif :
 > Jour 1 (Pecs) : développé couché **3 × 10 @ 60 kg**
 > → la prochaine séance Pecs, objectif **3 × 11 @ 60 kg**
 > → … jusqu'à **3 × 15** → l'app te dit de **monter la charge** : **3 × 10 @ 62,5 kg**
+
+## Ouvrir l'app sur ton iPhone (sans Mac)
+
+<img src="docs/expo-go-qr.png" width="220" alt="QR code Expo Go : exp://rc03keukql-anonymous-8081.exp.direct">
+
+1. Installe **Expo Go** depuis l'App Store (gratuit).
+2. Lance le serveur : sur GitHub, onglet **Actions** → **Aperçu Expo Go** → **Run workflow**.
+   Il se lance aussi tout seul après chaque modification de l'app (`mobile/`).
+   Attends environ une minute que l'étape « QR code » soit cochée.
+3. Scanne ce QR code avec l'**appareil photo** de l'iPhone, puis touche « Ouvrir dans Expo Go ».
+
+Le QR code ne change jamais (adresse `exp://rc03keukql-anonymous-8081.exp.direct`), mais il ne marche
+que pendant que le serveur tourne : 60 minutes après une modification, 120 minutes
+quand tu le lances à la main (réglable jusqu'à 330). Tes séances restent enregistrées sur le téléphone.
 
 ## Fonctionnalités (v0.1, partie fonctionnelle)
 
@@ -48,16 +63,19 @@ Le moteur est dans [`ProgressionEngine.swift`](RareCandyKit/Sources/RareCandyKit
 ## Architecture
 
 ```
-RareCandyKit/   Package Swift : modèle de données, moteur de progression, sauvegarde JSON.
-                Aucune dépendance à l'UI → réutilisable tel quel par un widget,
-                une app Apple Watch ou l'intégration Santé. Testé (Swift Testing).
-App/            App iOS SwiftUI (iOS 17+) : écrans Séance, Programme, Historique.
-project.yml     Description du projet Xcode (XcodeGen).
+mobile/              L'app (Expo SDK 58, Expo Router, TypeScript).
+  src/core/          Moteur de progression et statistiques, sans UI, testé (npm test).
+  src/app/           Écrans : onglets Accueil / Entraînement / Profil, séance, bilan, routines.
+  src/components/    Verre dépoli, boutons, tableau de séries, minuteur, graphiques.
+  src/theme/         Couleurs et typo du système de design (design-system/rarecandy/MASTER.md).
+RareCandyKit/, App/  Première version en Swift (SwiftUI). Plus utilisée par l'app, gardée
+                     pour un futur widget ou une app Apple Watch, qui s'écrivent en Swift.
 ```
 
-Les données sont un simple fichier JSON (`training.json`). Quand l'App Group sera activé,
-le fichier sera automatiquement déplacé dans le conteneur partagé pour que le widget
-et la montre puissent le lire.
+Les données sont enregistrées sur le téléphone (stockage local d'Expo SQLite).
+
+Développer sur un ordinateur : `cd mobile && npm install`, puis `npm test` (moteur),
+`npm run typecheck`, et `npx expo start` pour servir l'app à Expo Go sur le même Wi-Fi.
 
 ## Aperçu sur ordinateur (sans Mac)
 
@@ -82,7 +100,7 @@ Palette : `#E8F6FF` fond (35 %), `#7FE7D6` menthe (30 %), `#3BA7F2` bleu (25 %),
   (licence MIT), installé dans le projet : chaque session Claude Code sur ce dépôt le charge.
   Exemple : `python3 .claude/skills/ui-ux-pro-max/scripts/search.py "touch target" --domain ux`.
 
-## Lancer l'app iPhone (Mac requis)
+## Ancienne app SwiftUI (Mac requis)
 
 1. Installer Xcode (App Store) et [XcodeGen](https://github.com/yonaskolb/XcodeGen) :
    `brew install xcodegen`
@@ -97,12 +115,12 @@ Tests du moteur : `cd RareCandyKit && swift test`.
 
 ## Prochaines étapes
 
-- [ ] Porter le design du prototype dans l'app iPhone (SwiftUI) : couleurs, verre dépoli,
-      écrans Accueil / Entraînement / Profil, minuteur de repos, colonne « Précédent ».
+- [x] App Expo avec le design du prototype, testable sur iPhone via Expo Go.
 - [ ] Icône de l'app.
-- [ ] Widget « prochaine séance » (WidgetKit) : activer l'App Group dans `project.yml`
-      et ajouter une cible widget qui lit `training.json` via `RareCandyKit`.
-- [ ] App Apple Watch : saisie des séries depuis la montre (même package `RareCandyKit`).
+- [ ] Compte Expo (gratuit) : QR code permanent avec EAS Update, sans serveur à lancer.
+- [ ] Publication App Store : build dans le cloud avec EAS Build (programme Apple Developer, 99 €/an).
+- [ ] Widget « prochaine séance » et app Apple Watch : cibles Swift ajoutées au projet Expo
+      (build EAS nécessaire, Expo Go ne les affiche pas).
 - [ ] Apple Santé (HealthKit) : enregistrer chaque séance comme entraînement
       « Musculation traditionnelle » à la fin de la séance.
-- [ ] Modifier une séance passée, unité lb, synchronisation iCloud.
+- [ ] Modifier une séance passée, unité lb, sauvegarde iCloud.

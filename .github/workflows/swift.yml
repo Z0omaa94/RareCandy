@@ -1,0 +1,44 @@
+name: Swift
+
+# The SwiftUI app and RareCandyKit (kept for a future widget / Apple Watch target).
+# Runs on macOS only when the Swift code changes.
+on:
+  push:
+    paths:
+      - 'RareCandyKit/**'
+      - 'App/**'
+      - 'project.yml'
+      - '.github/workflows/swift.yml'
+  pull_request:
+    paths:
+      - 'RareCandyKit/**'
+      - 'App/**'
+      - 'project.yml'
+      - '.github/workflows/swift.yml'
+
+jobs:
+  core-tests:
+    name: Tests du moteur (RareCandyKit)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: swift test
+        working-directory: RareCandyKit
+        run: swift test
+
+  ios-build:
+    name: Build de l'app iOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installer XcodeGen
+        run: brew install xcodegen
+      - name: Générer le projet Xcode
+        run: xcodegen generate
+      - name: Compiler pour le simulateur
+        run: |
+          xcodebuild build \
+            -project RareCandy.xcodeproj \
+            -scheme RareCandy \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO

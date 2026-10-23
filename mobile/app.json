@@ -1,26 +1,29 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "RareCandy",
+    "slug": "rarecandy",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "rarecandy",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "bundleIdentifier": "com.rarecandy.app",
+      "supportsTablet": false
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#E8F6FF",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.rarecandy.app"
     },
     "web": {
-      "output": "server",
+      "output": "single",
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
@@ -28,9 +31,12 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#E8F6FF",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 76,
+          "dark": {
+            "backgroundColor": "#061B40"
+          }
         }
       ],
       "expo-sqlite"
