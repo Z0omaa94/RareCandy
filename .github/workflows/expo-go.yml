@@ -1,0 +1,109 @@
+name: Aperçu Expo Go
+
+# Runs the Expo dev server on a GitHub runner, reachable from a phone through an
+# Expo tunnel, so the app opens in Expo Go without a Mac. The tunnel address is
+# fixed (TUNNEL_ID), so the QR code in the README always points here.
+
+on:
+  push:
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/expo-go.yml'
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Durée de l'aperçu, en minutes (330 max)"
+        default: '120'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: expo-go-preview
+  cancel-in-progress: true
+
+env:
+  TUNNEL_ID: rc03keukql
+  MINUTES: ${{ inputs.minutes || '60' }}
+
+jobs:
+  preview:
+    name: Serveur Expo Go
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Démarrer le serveur et le tunnel
+        run: |
+          mkdir -p .expo
+          echo "{\"urlRandomness\":\"$TUNNEL_ID\"}" > .expo/settings.json
+          nohup npx expo start --tunnel --port 8081 > expo.log 2>&1 &
+          for i in $(seq 1 90); do
+            grep -q "Tunnel ready" expo.log && break
+            sleep 2
+          done
+          cat expo.log
+          grep -q "Tunnel ready" expo.log
+
+      - name: Vérifier le tunnel et préparer le bundle iOS
+        run: |
+          HOST="$TUNNEL_ID-anonymous-8081.exp.direct"
+          curl -sSf --retry 5 --retry-delay 3 "http://$HOST/status"; echo
+          BUNDLE=$(curl -sSf -H 'expo-platform: ios' -H 'accept: application/expo+json,application/json' http://127.0.0.1:8081/ \
+            | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const u=new URL(JSON.parse(s).launchAsset.url);console.log('http://127.0.0.1:8081'+u.pathname+u.search)})")
+          curl -sSf -o /dev/null -w "Bundle iOS : %{size_download} octets en %{time_total} s\n" --max-time 600 "$BUNDLE"
+
+      - name: QR code
+        run: |
+          URL="exp://$TUNNEL_ID-anonymous-8081.exp.direct"
+          node scripts/expo-go-qr.mjs "$URL"
+          {
+            echo "## Aperçu Expo Go ouvert"
+            echo
+            echo "Adresse : \`$URL\`"
+            echo
+            echo "Scanne le QR code du README avec l'appareil photo de l'iPhone (Expo Go installé)."
+            echo "Le serveur reste ouvert environ $MINUTES minutes."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Garder le serveur ouvert
+        run: |
+          case "$MINUTES" in ''|*[!0-9]*) MINUTES=60 ;; esac
+          [ "$MINUTES" -gt 330 ] && MINUTES=330
+          END=$(( $(date +%s) + MINUTES * 60 ))
+          HOST="$TUNNEL_ID-anonymous-8081.exp.direct"
+          FAILS=0
+          while [ "$(date +%s)" -lt "$END" ]; do
+            sleep 60
+            if curl -sf --max-time 20 "http://$HOST/status" > /dev/null; then
+              FAILS=0
+            else
+              FAILS=$((FAILS + 1))
+              echo "Tunnel injoignable ($FAILS)"
+              if [ "$FAILS" -ge 3 ]; then
+                echo "Redémarrage du serveur"
+                pkill -f "expo start" || true
+                sleep 5
+                nohup npx expo start --tunnel --port 8081 >> expo.log 2>&1 &
+                FAILS=0
+                sleep 60
+              fi
+            fi
+          done
+
+      - name: Journal du serveur
+        if: always()
+        run: cat expo.log || true
