@@ -50,9 +50,12 @@ jobs:
         run: |
           mkdir -p .expo
           echo "{\"urlRandomness\":\"$TUNNEL_ID\"}" > .expo/settings.json
-          nohup npx expo start --tunnel --port 8081 > expo.log 2>&1 &
+          # SDK 58's default tunnel needs an Expo account; the ngrok one does not.
+          nohup npx expo start --tunnel ngrok --port 8081 > expo.log 2>&1 &
+          PID=$!
           for i in $(seq 1 90); do
             grep -q "Tunnel ready" expo.log && break
+            kill -0 "$PID" 2> /dev/null || break
             sleep 2
           done
           cat expo.log
@@ -97,7 +100,7 @@ jobs:
                 echo "Redémarrage du serveur"
                 pkill -f "expo start" || true
                 sleep 5
-                nohup npx expo start --tunnel --port 8081 >> expo.log 2>&1 &
+                nohup npx expo start --tunnel ngrok --port 8081 >> expo.log 2>&1 &
                 FAILS=0
                 sleep 60
               fi
